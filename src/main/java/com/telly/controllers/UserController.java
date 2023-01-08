@@ -1,3 +1,8 @@
+package com.telly.controllers;
+
+import java.security.Principal;
+import java.util.List;
+
 public class UserController{
     public String showLogin() {
 		return "login";
@@ -13,7 +18,7 @@ public class UserController{
 	}
 	public String createUser(@Validated(FormValidationGroup.class) User user, BindingResult result) {
 
-		if(result.hasErrors()) {
+		if (result.hasErrors()) {
 			return "createaccount";
 		}
 
@@ -21,67 +26,47 @@ public class UserController{
 		user.setEnabled(true);
 
 		userService.create(user);
-package com.telly.controllers;
 
-import java.security.Principal;
-import java.util.List;
+		@Autowired
+		UserService userService;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
-import com.telly.dao.FormValidationGroup;
-import com.telly.dao.Reserve;
-import com.telly.dao.User;
-import com.telly.service.ReserveService;
-import com.telly.service.UserService;
+		@Autowired
+		ReserveService reserveService;
 
 
+		@RequestMapping(value = "/reservebook", method = RequestMethod.POST)
+		public String createReserveBook (@Validated(FormValidationGroup.class) Reserve reserve, BindingResult
+		result, Principal principal){
 
-@Controller
-public class UserController {
+			if (result.hasErrors()) {
+				return "reservebus";
+			}
 
-	@Autowired
-	UserService userService;
+			String username = principal.getName();
+			reserve.getUser().setUsername(username);
 
-	@Autowired
-	ReserveService reserveService;
+			reserveService.reserve(reserve);
 
 
-	@RequestMapping(value = "/reservebook", method = RequestMethod.POST)
-	public String createReserveBook(@Validated(FormValidationGroup.class) Reserve reserve, BindingResult result, Principal principal) {
+			return "home";
 
-		if (result.hasErrors()) {
-			return "reservebus";
 		}
-
-		String username = principal.getName();
-		reserve.getUser().setUsername(username);
-
-		reserveService.reserve(reserve);
+		@RequestMapping(value = "/getreservations", method = RequestMethod.GET)
+		public String getReserveBook (@Validated(FormValidationGroup.class) Reserve reserve, Model model, Principal
+		principal){
 
 
-		return "home";
+			String username = principal.getName();
+			reserve.getUser().setUsername(username);
 
+			List<Reserve> reserves = reserveService.getReserves(username);
+			model.addAttribute("reserves", reserves);
+			System.out.println(reserves);
+
+
+			return "home";
+
+		}
+		}
 	}
-    @RequestMapping(value = "/getreservations", method = RequestMethod.GET)
-	public String getReserveBook(@Validated(FormValidationGroup.class) Reserve reserve, Model model, Principal principal) {
 
-
-		String username = principal.getName();
-		reserve.getUser().setUsername(username);
-
-		List<Reserve> reserves = reserveService.getReserves(username);
-		model.addAttribute("reserves", reserves);
-		System.out.println(reserves);
-
-
-		return "home";
-
-	}
-	
-}
